@@ -22,7 +22,7 @@ payload = {
 encoded_data = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode()
 
 # Generate target URL (localhost for dev)
-url = f"http://100.80.160.128:3000/?data={encoded_data}"
+url = f"https://parking-ticket-management.vercel.app/?data={encoded_data}"
 
 # Create QR code
 qr = qrcode.QRCode(
