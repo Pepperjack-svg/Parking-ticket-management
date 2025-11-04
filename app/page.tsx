@@ -1,65 +1,168 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import QRCode from "qrcode";
+import { motion } from "framer-motion";
+
+export default function ParkingQRPage() {
+  const searchParams = useSearchParams();
+
+  const [loading, setLoading] = useState(true);
+  const [vehicle, setVehicle] = useState("");
+  const [entryDate, setEntryDate] = useState("");
+  const [entryTime, setEntryTime] = useState("");
+  const [exitTime, setExitTime] = useState("");
+  const [duration, setDuration] = useState("");
+  const [amount, setAmount] = useState<number | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState("");
+
+  useEffect(() => {
+    const encodedData = searchParams.get("data");
+
+    if (!encodedData) {
+      setTimeout(() => setLoading(false), 3500);
+      return;
+    }
+
+    try {
+      const decodedJson = atob(encodedData);
+      const data = JSON.parse(decodedJson);
+      const { vehicle, date, time } = data;
+
+      if (!vehicle || !date || !time) {
+        setTimeout(() => setLoading(false), 3500);
+        return;
+      }
+
+      setVehicle(vehicle);
+      setEntryDate(date);
+      setEntryTime(time);
+
+      const entryDateTime = new Date(`${date} ${time}`);
+      const now = new Date();
+
+      const currentFormatted = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      });
+      setExitTime(currentFormatted);
+
+      const diffMs = now.getTime() - entryDateTime.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      const totalMinutes = Math.floor(diffMs / (1000 * 60));
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      setDuration(`${hours}h ${minutes}m`);
+
+      const totalAmount = diffHours <= 1 ? 25 : Math.ceil(diffHours) * 25;
+      setAmount(totalAmount);
+
+      const qrUrl = `${window.location.origin}/?data=${encodedData}`;
+      QRCode.toDataURL(qrUrl)
+        .then((dataUrl) => setQrDataUrl(dataUrl))
+        .catch(console.error)
+        .finally(() => {
+          // ⏱ Force 3.5s loading duration
+          setTimeout(() => setLoading(false), 3500);
+        });
+    } catch (err) {
+      console.error("Invalid or tampered QR data:", err);
+      setTimeout(() => setLoading(false), 3500);
+    }
+  }, [searchParams]);
+
+  const handleDownload = () => {
+    if (!qrDataUrl) return;
+    const link = document.createElement("a");
+    link.href = qrDataUrl;
+    link.download = `QR_${vehicle}_${entryDate}.png`;
+    link.click();
+  };
+
+  // ⏳ Loading Page (3.5s)
+  if (loading) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+        <motion.div
+          className="flex flex-col items-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.div
+            className="w-16 h-16 border-4 border-gray-300 border-t-red-600 rounded-full animate-spin"
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1 }}
+          ></motion.div>
+          <h1 className="mt-6 text-2xl font-bold text-gray-800">Mall Parking</h1>
+          <p className="mt-2 text-gray-600">Loading parking details...</p>
+        </motion.div>
       </main>
-    </div>
+    );
+  }
+
+  // ✅ Main Parking Summary
+  return (
+    <motion.main
+      className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+    >
+      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">
+          🚗 Mall Parking Summary
+        </h1>
+
+        {vehicle ? (
+          <motion.div
+            className="space-y-3 text-gray-700"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <p>
+              <span className="font-semibold">Vehicle No:</span> {vehicle}
+            </p>
+            <p>
+              <span className="font-semibold">Entry Date:</span> {entryDate}
+            </p>
+            <p>
+              <span className="font-semibold">Entry Time:</span> {entryTime}
+            </p>
+            <p>
+              <span className="font-semibold">Exit Time:</span> {exitTime}
+            </p>
+            <p>
+              <span className="font-semibold">Duration:</span> {duration}
+            </p>
+            <p className="text-xl font-bold text-red-600">
+              💰 Parking Fee: ₹{amount ?? "--"}
+            </p>
+
+            {qrDataUrl && (
+              <div className="flex flex-col items-center mt-6 space-y-3">
+                <img
+                  src={qrDataUrl}
+                  alt="Parking QR Code"
+                  className="w-40 h-40 border border-gray-300 rounded-lg"
+                />
+                <button
+                  onClick={handleDownload}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold transition"
+                >
+                  ⬇️ Download QR
+                </button>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <p className="text-gray-500">Invalid or missing QR data</p>
+        )}
+      </div>
+    </motion.main>
   );
 }
