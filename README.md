@@ -1,36 +1,139 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# 🅿️ Mall Parking QR System
 
-First, run the development server:
+A modern, full-stack **parking ticket management system** that generates and scans QR codes to calculate parking fees automatically.  
+Built with **Next.js 16**, **React 19**, **TypeScript**, and **Tailwind CSS**, this app offers a seamless experience for both parking operators and customers.
+
+---
+
+## 🚀 Features
+
+- 🧾 **Dynamic QR Generation** using Python (`qrcode`)
+- 🔒 **Secure Encoded Data** (Base64 payloads prevent manual tampering)
+- ⏱️ **Real-Time Fee Calculation** based on entry and exit time
+- 🕒 **AM/PM + Date Aware** duration computation
+- 💰 **Auto Fee Scaling** — ₹25 for ≤ 1 hour, ₹25/hr increment thereafter
+- 📱 **Responsive Design** built with Tailwind CSS
+- 📤 **QR Download Option** for user record or print
+- 🌐 **Fully Deployed** at [parking-ticket-management.vercel.app](https://parking-ticket-management.vercel.app)
+
+---
+
+## 🧠 Tech Stack
+
+| Layer | Technology |
+|-------|-------------|
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript |
+| **Styling** | Tailwind CSS 4, Framer Motion |
+| **QR Handling** | `qrcode` (JS), `qrcode` (Python) |
+| **Deployment** | Vercel (Turbopack) |
+| **Language Support** | English (UTF-8) |
+
+---
+
+## 🧩 Workflow
+
+1. **Generate a QR** using the Python script:
+   ```bash
+   python qr_generator.py
+
+
+* Prompts for the vehicle number
+* Automatically embeds the current date and time
+* Encodes data into a Base64 payload
+* Generates a QR that opens:
+
+  ```
+  https://parking-ticket-management.vercel.app/?data=ENCODED_STRING
+  ```
+
+2. **Scan the QR**
+
+   * Opens the deployed app
+   * Decodes the data securely
+   * Displays entry/exit details, duration, and calculated parking fee
+   * Option to download the same QR as an image
+
+---
+
+## ⚙️ Local Development
 
 ```bash
+# Clone the repository
+git clone https://github.com/Pepperjack-svg/Parking-ticket-management.git
+cd Parking-ticket-management
+
+# Install dependencies
+npm install
+
+# Start the dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🧰 Build for Production
 
-## Learn More
+```bash
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+The app will automatically optimize using **Turbopack** and **React Server Components**.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📦 Python QR Generator Setup
 
-## Deploy on Vercel
+```bash
+pip install qrcode[pil]
+python qr_generator.py
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Generates QR images in the current directory (`qr_<VEHICLE>.png`).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🧾 Example
+
+**Input:**
+
+```
+Vehicle No: TN66AM1232
+```
+
+**Output (QR Encoded):**
+
+```
+https://parking-ticket-management.vercel.app/?data=eyJ2ZWhpY2xlIjoiVE42NkFNM...
+```
+
+**Displayed on Web:**
+
+* Vehicle: TN66AM1232
+* Entry Date: 2025-11-04
+* Entry Time: 04:15:25 PM
+* Exit Time: 05:40:00 PM
+* Duration: 1h 25m
+* Parking Fee: ₹50
+
+---
+
+## 🧑‍💻 Author
+
+**Kishore**
+Developer & Designer — Smart Infrastructure Automation Systems
+📍 [parking-ticket-management.vercel.app](https://parking-ticket-management.vercel.app)
+
+---
+
+## 🛠️ License
+
+This project is licensed under the **MIT License** — free to use, modify, and distribute.
+
+```
+
+Would you like me to add **a QR image + demo screenshot section** (with Markdown image placeholders for GitHub)?
+```
