@@ -115,7 +115,7 @@ function ParkingContent() {
     >
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">
-          🚗 Mall Parking Summary
+          🚗 Mall Parking
         </h1>
 
         {vehicle ? (
