@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
 import { motion } from "framer-motion";
 
-export default function ParkingQRPage() {
+function ParkingContent() {
   const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(true);
@@ -20,7 +20,7 @@ export default function ParkingQRPage() {
   useEffect(() => {
     const encodedData = searchParams.get("data");
 
-    // Always show loading for at least 3.5s
+    // Always show loader for 3.5s
     const loadingTimer = setTimeout(() => setLoading(false), 3500);
 
     if (!encodedData) return;
@@ -36,7 +36,7 @@ export default function ParkingQRPage() {
       setEntryDate(date);
       setEntryTime(time);
 
-      // Parse full entry datetime (with AM/PM)
+      // Parse entry datetime with AM/PM support
       const entryDateTime = new Date(`${date} ${time}`);
       const now = new Date();
 
@@ -48,7 +48,7 @@ export default function ParkingQRPage() {
       });
       setExitTime(currentFormatted);
 
-      // Calculate time difference
+      // Calculate duration
       const diffMs = now.getTime() - entryDateTime.getTime();
       const diffHours = diffMs / (1000 * 60 * 60);
       const totalMinutes = Math.floor(diffMs / (1000 * 60));
@@ -56,15 +56,15 @@ export default function ParkingQRPage() {
       const minutes = totalMinutes % 60;
       setDuration(`${hours}h ${minutes}m`);
 
-      // Fee calculation
+      // Calculate fee
       const totalAmount = diffHours <= 1 ? 25 : Math.ceil(diffHours) * 25;
       setAmount(totalAmount);
 
-      // Generate QR
+      // Generate QR code (typed fix)
       const qrUrl = `${window.location.origin}/?data=${encodedData}`;
       QRCode.toDataURL(qrUrl)
-        .then((dataUrl) => setQrDataUrl(dataUrl))
-        .catch(console.error);
+        .then((dataUrl: string) => setQrDataUrl(dataUrl)) // ✅ Explicit type added here
+        .catch((err: unknown) => console.error("QR generation error:", err));
     } catch (err) {
       console.error("Invalid or tampered QR data:", err);
     }
@@ -72,6 +72,7 @@ export default function ParkingQRPage() {
     return () => clearTimeout(loadingTimer);
   }, [searchParams]);
 
+  // Download QR
   const handleDownload = () => {
     if (!qrDataUrl) return;
     const link = document.createElement("a");
@@ -80,7 +81,7 @@ export default function ParkingQRPage() {
     link.click();
   };
 
-  // 🔄 Loading Screen (3.5 s)
+  // 🔄 Loading Animation (3.5s)
   if (loading) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
@@ -104,7 +105,7 @@ export default function ParkingQRPage() {
     );
   }
 
-  // ✅ Parking Summary UI
+  // ✅ Parking Summary Page
   return (
     <motion.main
       className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6"
@@ -164,5 +165,22 @@ export default function ParkingQRPage() {
         )}
       </div>
     </motion.main>
+  );
+}
+
+// ✅ Suspense Wrapper for React 19 compliance
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen flex items-center justify-center bg-gray-100">
+          <div className="text-gray-600 text-lg font-medium">
+            Preparing page...
+          </div>
+        </main>
+      }
+    >
+      <ParkingContent />
+    </Suspense>
   );
 }
